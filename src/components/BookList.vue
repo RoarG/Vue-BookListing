@@ -1,39 +1,95 @@
 <template>
-    <div>
-        <h1>
-            {{title}}
-        </h1>
-        <ul> 
-            <book-item v-for="book in books" :book="book"></book-item>
-        </ul>      
+<div>
+    <div v-for="list in getCardsForChecklist">
+
+        <b>Checklist Name: {{list.name}}</b> - <a target="_blank" v-bind:href="list.url"> Trello Card </a>
+        <div v-for="item in list.checkItems">
+          <input type="checkbox" id="checkbox" v-model="item.state == 'complete'">
+          <label for="checkbox">{{ item.name }}</label>
+            {{ item.name }}
+            {{ item.id }}
+        </div>
         <hr>
-        <book-form @addBook='appendBook'></book-form>  
+
     </div>
+</div>
 </template>
 
 <script>
-import BookItem from "./BookItem";
-import BookForm from "./BookForm";
+// import BookItem from "./BookItem";
+// import BookForm from "./BookForm";
+import axios from "axios";
+import { error } from "util";
+
+const apiUrl = "https://api.trello.com/";
+const apiKey = "20496bbf6978138b3b3e5462eded71ea";
+const token =
+  "879ba30c74eb091eb42c222d871559378006b2caa26b338c442585c3edada979";
+
+function buildUrl(url) {
+  return apiUrl + url + "&key=" + apiKey + "&token=" + token;
+}
+
+var cardUrl = "/1/boards/Uky0qCHP/cards?filter=open";
+var checkListUrl = "1/boards/Uky0qCHP/checklists?fields=all";
+// var cardUrl = "/1/cards/";
+var boardId = "Uky0qCHP";
 
 export default {
   name: "Booklist",
-  components: {
-    BookItem,
-    BookForm
-  },
+  components: {},
   data() {
     return {
-      title: "All Books",
-      books: [
-        { title: "Self-Reliance", author: "Ralph Waldo Emerson" },
-        { title: "American Gods", author: "Neil Gaiman" },
-        { title: "Amusing Ourselves to Death", author: "Neil Postman" }
-      ]
+      checkListItems: [],
+      cards: []
     };
   },
+  mounted() {
+    this.getChecklistsOnBoard(boardId);
+    this.getAllMyCards();
+  },
   methods: {
-    appendBook(bookTitle, bookAuthor) {
-      this.books.push({ title: bookTitle, author: bookAuthor });
+    getChecklistsOnBoard(boardId) {
+      let url = buildUrl(checkListUrl);
+      axios
+        .get(url)
+        .then(respons => {
+          this.checkListItems = respons.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
+    getAllMyCards() {
+      let url = buildUrl(cardUrl);
+      axios
+        .get(url)
+        .then(respons => {
+          this.cards = respons.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
+  },
+  computed: {
+    getCardsForChecklist() {
+      let checkLists = this.checkListItems;
+      let cards = this.cards;
+
+      checkLists.forEach(element => {
+        console.log("find:", cards.find(card => card.id == element.idCard));
+      });
+
+      let result = checkLists.map(checkList =>
+        Object.assign(
+          checkList,
+          cards.find(card => card.id == checkList.idCard)
+        )
+      );
+      console.log("SDASD", result);
+
+      return result;
     }
   }
 };
