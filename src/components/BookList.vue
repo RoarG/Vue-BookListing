@@ -2,12 +2,10 @@
 <div>
     <div v-for="list in getCardsForChecklist">
 
-        <b>Checklist Name: {{list.name}}</b> - <a target="_blank" v-bind:href="list.url"> Trello Card </a>
+        <b>Card: {{list.name}}</b> - <a target="_blank" v-bind:href="list.url"> Trello Card </a>
         <div v-for="item in list.checkItems">
           <input type="checkbox" id="checkbox" v-model="item.state == 'complete'">
           <label for="checkbox">{{ item.name }}</label>
-            {{ item.name }}
-            {{ item.id }}
         </div>
         <hr>
 
@@ -21,18 +19,23 @@
 import axios from "axios";
 import { error } from "util";
 
+//TODO: move to secure place:
+const TRELLO_KEY = "20496bbf6978138b3b3e5462eded71ea";
+// const TRELLO_OAUTH_SECRET=
+
+const requestTokenUrl = "OAuthGetRequestToken";
+
 const apiUrl = "https://api.trello.com/";
-const apiKey = "20496bbf6978138b3b3e5462eded71ea";
 const token =
-  "879ba30c74eb091eb42c222d871559378006b2caa26b338c442585c3edada979";
+  "1e8bca5d65f830eef97d2d2e35d17324f90b5845317e364a289e8d7484045614";
 
 function buildUrl(url) {
-  return apiUrl + url + "&key=" + apiKey + "&token=" + token;
+  return apiUrl + url + "&key=" + TRELLO_KEY + "&token=" + token;
 }
 
 var cardUrl = "/1/boards/Uky0qCHP/cards?filter=open";
 var checkListUrl = "1/boards/Uky0qCHP/checklists?fields=all";
-// var cardUrl = "/1/cards/";
+var listUrl = "/1/boards/Uky0qCHP/lists?filter=open";
 var boardId = "Uky0qCHP";
 
 export default {
@@ -41,12 +44,14 @@ export default {
   data() {
     return {
       checkListItems: [],
-      cards: []
+      cards: [],
+      lists: []
     };
   },
   mounted() {
     this.getChecklistsOnBoard(boardId);
     this.getAllMyCards();
+    this.getAllListsOnBoard(boardId);
   },
   methods: {
     getChecklistsOnBoard(boardId) {
@@ -70,12 +75,24 @@ export default {
         .catch(error => {
           console.log(error);
         });
+    },
+    getAllListsOnBoard(boardId) {
+      let url = buildUrl(listUrl);
+      axios
+        .get(url)
+        .then(respons => {
+          this.lists = respons.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
     }
   },
   computed: {
     getCardsForChecklist() {
       let checkLists = this.checkListItems;
       let cards = this.cards;
+      let lists = this.lists;
 
       checkLists.forEach(element => {
         console.log("find:", cards.find(card => card.id == element.idCard));
