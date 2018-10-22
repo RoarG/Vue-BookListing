@@ -2,7 +2,11 @@
 <div>
     <div v-for="list in getCardsForChecklist">
 
-        <b>Card: {{list.name}}</b> - <a target="_blank" v-bind:href="list.url"> Trello Card </a>
+        <div v-if="list.name">
+          <b>Card: {{list.name}}</b> - <a target="_blank" v-bind:href="list.url"> Trello Card </a>
+        </div>
+
+        <div>Checklist: {{list.checkListName}}</div>
         <div v-for="item in list.checkItems">
           <input type="checkbox" id="checkbox" v-model="item.state == 'complete'">
           <label for="checkbox">{{ item.name }}</label>
@@ -17,7 +21,7 @@
 // import BookItem from "./BookItem";
 // import BookForm from "./BookForm";
 import axios from "axios";
-import { error } from "util";
+import { error, log } from "util";
 
 //TODO: move to secure place:
 const TRELLO_KEY = "20496bbf6978138b3b3e5462eded71ea";
@@ -34,7 +38,7 @@ function buildUrl(url) {
 }
 
 var cardUrl = "/1/boards/Uky0qCHP/cards?filter=visible";
-var checkListUrl = "1/boards/Uky0qCHP/checklists?fields=all";
+var checkListUrl = "1/boards/Uky0qCHP/checklists?cards=open&fields=all";
 var listUrl = "/1/boards/Uky0qCHP/lists?filter=open";
 var boardId = "Uky0qCHP";
 
@@ -53,6 +57,7 @@ export default {
     this.getChecklistsOnBoard(boardId);
     this.getAllMyCards();
     this.getAllListsOnBoard(boardId);
+    
   },
   methods: {
     getChecklistsOnBoard(boardId) {
@@ -61,15 +66,13 @@ export default {
         .get(url)
         .then(respons => {
           this.checkListItems = respons.data;
-
-        
         })
         .catch(error => {
           console.log(error);
         });
-          // Object.defineProperty(this.checkListItems, "checkListName",
-          // Object.getOwnPropertyDescriptor(this.checkListItems, name));
-          // delete this.checkListItems[name];
+
+     
+         
     },
     getAllMyCards() {
       let url = buildUrl(cardUrl);
@@ -99,10 +102,11 @@ export default {
       let checkLists = this.checkListItems;
       let cards = this.cards;
       let lists = this.lists;
-      // let newChecklist = this.newChecklist
-
-      checkLists.forEach(element => {
-        console.log("find:", cards.find(card => card.id == element.idCard));
+        
+      this.checkListItems.forEach(element => {
+        Object.defineProperty(element, "checkListName",
+        Object.getOwnPropertyDescriptor(element, "name"));
+        delete element["name"];
       });
 
       let result = checkLists.map(checkList =>
@@ -111,7 +115,7 @@ export default {
           cards.find(card => card.id == checkList.idCard)
         )
       );
-      
+
       return result;
     }
   }
