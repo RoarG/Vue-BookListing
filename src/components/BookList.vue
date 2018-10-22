@@ -33,7 +33,7 @@ function buildUrl(url) {
   return apiUrl + url + "&key=" + TRELLO_KEY + "&token=" + token;
 }
 
-var cardUrl = "/1/boards/Uky0qCHP/cards?filter=open";
+var cardUrl = "/1/boards/Uky0qCHP/cards?filter=visible";
 var checkListUrl = "1/boards/Uky0qCHP/checklists?fields=all";
 var listUrl = "/1/boards/Uky0qCHP/lists?filter=open";
 var boardId = "Uky0qCHP";
@@ -45,7 +45,8 @@ export default {
     return {
       checkListItems: [],
       cards: [],
-      lists: []
+      lists: [],
+      // newChecklist: []
     };
   },
   mounted() {
@@ -60,10 +61,15 @@ export default {
         .get(url)
         .then(respons => {
           this.checkListItems = respons.data;
+
+        
         })
         .catch(error => {
           console.log(error);
         });
+          // Object.defineProperty(this.checkListItems, "checkListName",
+          // Object.getOwnPropertyDescriptor(this.checkListItems, name));
+          // delete this.checkListItems[name];
     },
     getAllMyCards() {
       let url = buildUrl(cardUrl);
@@ -93,6 +99,7 @@ export default {
       let checkLists = this.checkListItems;
       let cards = this.cards;
       let lists = this.lists;
+      // let newChecklist = this.newChecklist
 
       checkLists.forEach(element => {
         console.log("find:", cards.find(card => card.id == element.idCard));
@@ -104,8 +111,7 @@ export default {
           cards.find(card => card.id == checkList.idCard)
         )
       );
-      console.log("SDASD", result);
-
+      
       return result;
     }
   }
